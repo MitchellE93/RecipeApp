@@ -37,16 +37,5 @@ public class IngredientController {
         return "recipe/ingredient/show";
     }
 
-    @GetMapping("/recipe/{recipeId}/ingredient/{id}/update")
-    public String updateRecipeIngredient(@PathVariable Long recipeId,
-                                       @PathVariable Long id, Model model )
-    {
-        model.addAttribute( "ingredient",
-                ingredientService.findIngredientCommandByRecipeIdAndId( recipeId, id ));
-        model.addAttribute(  )
-
-        return "recipe/ingredient/ingredientform";
-    }
-
 
 }
