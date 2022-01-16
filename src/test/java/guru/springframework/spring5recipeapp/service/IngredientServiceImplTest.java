@@ -1,44 +1,54 @@
 package guru.springframework.spring5recipeapp.service;
 
 import guru.springframework.spring5recipeapp.commands.IngredientCommand;
+import guru.springframework.spring5recipeapp.commands.UnitOfMeasureCommand;
+import guru.springframework.spring5recipeapp.converters.IngredientCommandToIngredient;
 import guru.springframework.spring5recipeapp.converters.IngredientToIngredientCommand;
+import guru.springframework.spring5recipeapp.converters.UnitOfMeasureCommandToUnitOfMeasure;
 import guru.springframework.spring5recipeapp.converters.UnitOfMeasureToUnitOfMeasureCommand;
 import guru.springframework.spring5recipeapp.model.Ingredient;
 import guru.springframework.spring5recipeapp.model.Recipe;
+import guru.springframework.spring5recipeapp.model.UnitOfMeasure;
 import guru.springframework.spring5recipeapp.repositories.RecipeRepository;
+import guru.springframework.spring5recipeapp.repositories.UnitOfMeasureRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import javax.persistence.criteria.CriteriaBuilder;
-
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 class IngredientServiceImplTest {
 
-    private final IngredientToIngredientCommand ingredientToIngredientCommand;
-
     @Mock
     private RecipeRepository recipeRepository;
 
+    @Mock
+    private UnitOfMeasureRepository unitOfMeasureRepository;
+
     private IngredientService ingredientService;
+
+    private final IngredientToIngredientCommand ingredientToIngredientCommand;
+
+    private final IngredientCommandToIngredient ingredientCommandToIngredient;
+
 
     public IngredientServiceImplTest()
     {
-        this.ingredientToIngredientCommand =
-                new IngredientToIngredientCommand( new UnitOfMeasureToUnitOfMeasureCommand() );
+        this.ingredientToIngredientCommand = new IngredientToIngredientCommand( new UnitOfMeasureToUnitOfMeasureCommand() );
+        this.ingredientCommandToIngredient = new IngredientCommandToIngredient( new UnitOfMeasureCommandToUnitOfMeasure() );
     }
 
     @BeforeEach
     void setUp()
     {
         MockitoAnnotations.openMocks( this );
-        ingredientService = new IngredientServiceImpl( recipeRepository, ingredientToIngredientCommand );
+        ingredientService = new IngredientServiceImpl( recipeRepository, unitOfMeasureRepository, ingredientToIngredientCommand, ingredientCommandToIngredient );
     }
 
     @Test
@@ -64,12 +74,39 @@ class IngredientServiceImplTest {
 
         when( recipeRepository.findById( anyLong() )).thenReturn( recipeOptional );
 
-        //then
+        //when
         IngredientCommand ingredientCommand = ingredientService.findIngredientCommandByRecipeIdAndId( 1L, 3L );
 
-        //when
+        //then
         assertEquals( 3L, ingredientCommand.getId() );
         assertEquals( 1L, ingredientCommand.getRecipeId() );
         verify( recipeRepository, times( 1 ) ).findById( anyLong() );
+    }
+
+    @Test
+    void saveIngredientCommand()
+    {
+        //given
+        IngredientCommand command = new IngredientCommand();
+        command.setId( 3L );
+        command.setRecipeId( 2L );
+
+        Optional<Recipe> recipeOptional = Optional.of( new Recipe() );
+
+        Recipe savedRecipe = new Recipe();
+        savedRecipe.addIngredient( new Ingredient() );
+        savedRecipe.getIngredients().iterator().next().setId( 3L );
+
+        when( recipeRepository.findById( anyLong() ) ).thenReturn( recipeOptional );
+        when( recipeRepository.save( any() ) ).thenReturn( savedRecipe );
+
+        //when
+        IngredientCommand savedCommand = ingredientService.saveIngredientCommand( command );
+
+        //then
+        assertEquals( 3L, savedCommand.getId() );
+        verify( recipeRepository, times( 1 ) ).findById( anyLong() );
+        verify( recipeRepository, times( 1 ) ).save( any( Recipe.class ) );
+
     }
 }
