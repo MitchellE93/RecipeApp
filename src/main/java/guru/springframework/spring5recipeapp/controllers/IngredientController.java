@@ -1,6 +1,8 @@
 package guru.springframework.spring5recipeapp.controllers;
 
 import guru.springframework.spring5recipeapp.commands.IngredientCommand;
+import guru.springframework.spring5recipeapp.commands.RecipeCommand;
+import guru.springframework.spring5recipeapp.commands.UnitOfMeasureCommand;
 import guru.springframework.spring5recipeapp.service.IngredientService;
 import guru.springframework.spring5recipeapp.service.RecipeService;
 import guru.springframework.spring5recipeapp.service.UnitOfMeasureService;
@@ -42,6 +44,30 @@ public class IngredientController {
         model.addAttribute( "ingredient",
                  ingredientService.findIngredientCommandByRecipeIdAndId( recipeId, id ));
         return "recipe/ingredient/show";
+    }
+
+    @GetMapping("recipe/{recipeId}/ingredient/new")
+    public String addNewIngredient(@PathVariable Long recipeId, Model model )
+    {
+        RecipeCommand recipeCommand = recipeService.findRecipeCommandById( recipeId );
+
+        IngredientCommand ingredientCommand = new IngredientCommand();
+        ingredientCommand.setRecipeId( recipeId );
+        model.addAttribute( "ingredient", ingredientCommand );
+
+        ingredientCommand.setUom( new UnitOfMeasureCommand() );
+
+        model.addAttribute( "uomList", unitOfMeasureService.listAllUoms() );
+
+        return "recipe/ingredient/ingredientform";
+    }
+
+    @GetMapping("recipe/{recipeId}/ingredient/{id}/delete")
+    public String deleteIngredient(@PathVariable Long recipeId,
+                                   @PathVariable Long id)
+    {
+        ingredientService.deleteById( recipeId, id );
+        return String.format( "redirect:/recipe/%s/ingredients", recipeId );
     }
 
     @GetMapping("/recipe/{recipeId}/ingredient/{id}/update")

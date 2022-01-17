@@ -59,6 +59,23 @@ public class IngredientServiceImpl implements IngredientService {
     }
 
     @Override
+    public void deleteById(Long recipeId, Long ingredientId)
+    {
+       Optional<Recipe> recipeOptional = recipeRepository.findById( recipeId );
+
+       if( recipeOptional.isPresent() )
+       {
+           Recipe recipe = recipeOptional.get();
+
+           Optional<Ingredient> ingredientOptional = recipe.getIngredients().stream()
+                   .filter( i -> i.getId().equals( ingredientId ) )
+                   .findFirst();
+
+           ingredientOptional.ifPresent( ingredient -> recipeRepository.save( recipe.removeIngredient( ingredient ) ) );
+       }
+    }
+
+    @Override
     public IngredientCommand saveIngredientCommand(IngredientCommand command)
     {
         Optional<Recipe> recipeOptional = recipeRepository.findById( command.getRecipeId() );
@@ -87,13 +104,24 @@ public class IngredientServiceImpl implements IngredientService {
         }
         else
         {
-            recipe.addIngredient( ingredientCommandToIngredient.convert( command ) );
+            Ingredient ingredient = ingredientCommandToIngredient.convert( command );
+            recipe.addIngredient( ingredient );
         }
         Recipe savedRecipe = recipeRepository.save( recipe );
 
-        return ingredientToIngredientCommand.convert( savedRecipe.getIngredients().stream()
+        Optional<Ingredient> savedIngredientOptional = savedRecipe.getIngredients().stream()
                 .filter( i -> i.getId().equals( command.getId() ) )
-                .findFirst()
-                .get() );
+                .findFirst();
+
+        if( savedIngredientOptional.isEmpty() )
+        {
+            savedIngredientOptional = savedRecipe.getIngredients().stream()
+                    .filter( i -> i.getDescription().equals( command.getDescription() ) )
+                    .filter( i -> i.getAmount().equals( command.getAmount() ) )
+                    .filter( i -> i.getUom().getId().equals( command.getUom().getId() ) )
+                    .findFirst();
+        }
+
+        return ingredientToIngredientCommand.convert( savedIngredientOptional.get() );
     }
 }

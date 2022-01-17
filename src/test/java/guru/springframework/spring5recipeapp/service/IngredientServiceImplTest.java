@@ -84,7 +84,7 @@ class IngredientServiceImplTest {
     }
 
     @Test
-    void saveIngredientCommand()
+    void testSaveIngredientCommand()
     {
         //given
         IngredientCommand command = new IngredientCommand();
@@ -107,6 +107,32 @@ class IngredientServiceImplTest {
         assertEquals( 3L, savedCommand.getId() );
         verify( recipeRepository, times( 1 ) ).findById( anyLong() );
         verify( recipeRepository, times( 1 ) ).save( any( Recipe.class ) );
-
     }
+
+    @Test
+    void testDeleteById()
+    {
+        //given
+        Recipe recipe = new Recipe();
+        Ingredient ingredient = new Ingredient();
+        ingredient.setId( 3L );
+        recipe.addIngredient( ingredient );
+        Optional<Recipe> recipeOptional = Optional.of( recipe );
+
+        when( recipeRepository.findById( anyLong() )).thenReturn( recipeOptional );
+
+        //when
+        ingredientService.deleteById( 1L, 3L );
+
+        //then
+        verify( recipeRepository, times( 1 ) ).findById( anyLong() );
+        verify( recipeRepository, times( 1 ) ).save( any( Recipe.class ) );
+    }
+
+
+
+
+
+
+
 }

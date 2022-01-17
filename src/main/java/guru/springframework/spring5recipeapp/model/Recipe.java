@@ -24,7 +24,10 @@ public class Recipe {
     @Lob
     private String directions;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "recipe")
+    @OneToMany(
+            cascade = CascadeType.ALL,
+            mappedBy = "recipe",
+            orphanRemoval = true)
     private Set<Ingredient> ingredients = new HashSet<>();
 
     @Lob
@@ -46,6 +49,13 @@ public class Recipe {
     {
         ingredients.add( ingredient );
         ingredient.setRecipe( this );
+        return this;
+    }
+
+    public Recipe removeIngredient( Ingredient ingredient )
+    {
+        ingredients.remove( ingredient );
+        ingredient.setRecipe( null );
         return this;
     }
 
